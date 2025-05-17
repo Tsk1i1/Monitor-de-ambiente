@@ -5,8 +5,9 @@
 #include <EEPROM.h> // Biblioteca para armazenamento não volátil
 
 #define LOG_OPTION 1 // Ativa ou desativa o registro de dados
-#define MOSTRAR_MEDIA 0 // Mostra ou não a média da luminosidade na serial
+#define MOSTRAR_MEDIA 1 // Mostra ou não a média da luminosidade na serial
 #define UTC_OFFSET -3    // Ajuste de fuso horário para UTC-3
+#define SERIAL_OPTION 1 
 
 // Configurações do DHT
 #define DHTPIN 3 // Pino de leitura do sensor DHT
@@ -29,6 +30,8 @@ const int intervalo = 10000; // Tempo entre médias (10 segundos)
 unsigned long tempoAnterior = 0; // Controle do tempo
 const int amostras = 10;     // Número de leituras para média
 int somaLuz = 0;
+int somaTemp = 0;
+int somaUmid = 0;
 int contador = 0;
 
 // Configuraçãoes do EEPROM
@@ -53,7 +56,7 @@ byte lamp[8] = {
 };
 
 byte term[8] = {
-  B00100,  //   #
+  B01110,  //   #
   B01010,  //  # #
   B01010,  //  # #
   B01010,  //  # #
@@ -119,10 +122,9 @@ void setup() {
   Serial.begin(9600);
   dht.begin();
   RTC.begin();
-  RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  //RTC.adjust(DateTime(2025, 5, 15, 8, 30, 0));  // Ajustar a data e hora apropriadas uma vez inicialmente, depois comentar
+  //RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  RTC.adjust(DateTime(2025,5,17,3,45,00));  // Ajustar a data e hora apropriadas uma vez inicialmente, depois comentar
   EEPROM.begin();
-
 // Configurando LCD para mensagens
   lcd.init(); // Define o LCD como 16 colunas e 2 linhas
   lcd.backlight();
@@ -190,33 +192,50 @@ void loop() {
   // Aplica o fuso horário UTC-3
   int offsetSeconds = UTC_OFFSET * 3600; // Convertendo horas para segundos
   now = now.unixtime() + offsetSeconds; // Adicionando o deslocamento ao tempo atual
+  
   DateTime adjustedTime = DateTime(now); // Tempo ajustado
-
+ 
   if (LOG_OPTION) get_log(); // Função de log, se ativada
-
-// Coleta da média de luminosidade em 10s
-  int leituraAtual = analogRead(Lerluz);
-  somaLuz += leituraAtual;
-  contador++;
-
-  if (millis() - tempoAnterior >= intervalo) {
-    tempoAnterior = millis();
-  }
-  int mediaLuz = somaLuz / contador;
-  if (MOSTRAR_MEDIA){
-    Serial.print("A luminosidade esteve em: ");
-    Serial.print(mediaLuz);
-    Serial.println(" % nos ultimos 10 segundos");
-  }
-  // Reset para próxima média
-  somaLuz = 0;
-  contador = 0;
 
 // Leitura de sensores
   int luz = analogRead(Lerluz);
   float temperatura = dht.readTemperature();
   float umidade = dht.readHumidity();
   int nivelLuz = map(luz, luzmax, 1023, 100, 0);  // Mapeia o valor da luz para uma escala de 0 a 100%
+
+// Coleta da média de luminosidade em 10s
+  int leituraAtualLuz  = nivelLuz;
+  int leituraAtualTemp = temperatura;
+  int leituraAtualUmid = umidade;
+  somaLuz += leituraAtualLuz;
+  somaTemp += leituraAtualTemp;
+  somaUmid += leituraAtualUmid;
+  contador++;
+
+  if (millis() - tempoAnterior >= intervalo) {
+    tempoAnterior = millis();
+  }
+  int mediaLuz = somaLuz / contador;
+  int mediaTemp = somaTemp / contador;
+  int mediaUmid = somaUmid / contador;
+
+  if (MOSTRAR_MEDIA){
+    Serial.println("________________________________________________________________________");
+    Serial.println("|         Média dos valores médidos nos ultimos 10 segundos            |");
+    Serial.print("       Luminosidade: ");
+    Serial.print(mediaLuz);
+    Serial.print(" %   Temperatura: ");
+    Serial.print(mediaTemp);
+    Serial.print("°C   Umidade: ");
+    Serial.print(mediaUmid);
+    Serial.print("% ");
+    Serial.println("________________________________________________________________________");
+  }
+  // Reset para próxima média
+  somaLuz = 0;
+  somaTemp = 0;
+  somaUmid = 0;
+  contador = 0;
 
   lcd.setCursor(0,0);
   lcd.print("\x01:"); // Ícone de luz
@@ -304,16 +323,16 @@ void loop() {
     int luzInt = nivelLuz;
     int tempInt = (int)(temperatura * 100);
     int umidInt = (int)(umidade* 100);
-    long timestamp = adjustedTime.unixtime();
 
     // Salvar os dados na EEPROM
-    EEPROM.put(currentAddress, timestamp);          // 4 bytes
+    EEPROM.put(currentAddress, now.unixtime());     // 4 bytes
     EEPROM.put(currentAddress + 4, luzInt);         // 2 bytes
     EEPROM.put(currentAddress + 6, tempInt);        // 2 bytes
     EEPROM.put(currentAddress + 8, umidInt);        // 2 bytes
     getNextAddress(); // Atualiza o endereço para o próximo registro
   }
 }
+
 
 void getNextAddress() {
     currentAddress += recordSize;
