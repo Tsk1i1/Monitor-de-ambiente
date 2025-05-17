@@ -7,7 +7,6 @@
 #define LOG_OPTION 1 // Ativa ou desativa o registro de dados
 #define MOSTRAR_MEDIA 1 // Mostra ou não a média da luminosidade na serial
 #define UTC_OFFSET -3    // Ajuste de fuso horário para UTC-3
-#define SERIAL_OPTION 1 
 
 // Configurações do DHT
 #define DHTPIN 3 // Pino de leitura do sensor DHT
@@ -123,8 +122,10 @@ void setup() {
   dht.begin();
   RTC.begin();
   RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  //RTC.adjust(DateTime(2025,5,17,3,45,00));  // Ajustar a data e hora apropriadas uma vez inicialmente, depois comentar
+  //RTC.adjust(DateTime(2025,5,17,14,23,00));
+  
   EEPROM.begin();
+  
 // Configurando LCD para mensagens
   lcd.init(); // Define o LCD como 16 colunas e 2 linhas
   lcd.backlight();
@@ -135,7 +136,7 @@ void setup() {
   lcd.createChar(5, Meh);
   lcd.createChar(6, Triste);
 
-// Tela de boas-vindas animada
+//Tela de boas-vindas animada
   for (int i = 0; i < 6; i++) {
     lcd.print("    Vinheria"); // Exibe texto centralizado
     lcd.setCursor(0,1); // Move para a segunda linha
@@ -192,9 +193,8 @@ void loop() {
   // Aplica o fuso horário UTC-3
   int offsetSeconds = UTC_OFFSET * 3600; // Convertendo horas para segundos
   now = now.unixtime() + offsetSeconds; // Adicionando o deslocamento ao tempo atual
-  
   DateTime adjustedTime = DateTime(now); // Tempo ajustado
- 
+  
   if (LOG_OPTION) get_log(); // Função de log, se ativada
 
 // Leitura de sensores
