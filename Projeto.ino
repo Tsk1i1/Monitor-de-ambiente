@@ -122,8 +122,8 @@ void setup() {
   Serial.begin(9600);
   dht.begin();
   RTC.begin();
-  //RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  RTC.adjust(DateTime(2025,5,17,3,45,00));  // Ajustar a data e hora apropriadas uma vez inicialmente, depois comentar
+  RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  //RTC.adjust(DateTime(2025,5,17,3,45,00));  // Ajustar a data e hora apropriadas uma vez inicialmente, depois comentar
   EEPROM.begin();
 // Configurando LCD para mensagens
   lcd.init(); // Define o LCD como 16 colunas e 2 linhas
