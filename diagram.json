@@ -80,13 +80,7 @@
       "left": 474.6,
       "attrs": { "temperature": "13.2", "humidity": "65.5" }
     },
-    {
-      "type": "wokwi-ds1307",
-      "id": "rtc1",
-      "top": 244.2,
-      "left": 268.9,
-      "attrs": {}
-    },
+    { "type": "wokwi-ds1307", "id": "rtc1", "top": 244.2, "left": 268.9, "attrs": {} },
     {
       "type": "wokwi-resistor",
       "id": "r4",
@@ -122,6 +116,8 @@
     [ "dht2:SDA", "uno:3", "green", [ "v-38.4", "h-230.3", "v-201.6", "h-48" ] ],
     [ "ldr1:VCC", "r4:1", "red", [ "h0", "v-48" ] ],
     [ "r4:2", "bb1:bp.27", "red", [ "h0" ] ],
+    [ "rtc1:SCL", "uno:A5", "green", [ "h0" ] ],
+    [ "rtc1:SDA", "uno:A4", "green", [ "h0" ] ],
     [ "led1:A", "bb1:5t.a", "", [ "$bb" ] ],
     [ "led1:C", "bb1:4t.a", "", [ "$bb" ] ],
     [ "led2:A", "bb1:8t.a", "", [ "$bb" ] ],
@@ -137,9 +133,7 @@
     [ "bz1:1", "bb1:21t.a", "", [ "$bb" ] ],
     [ "bz1:2", "bb1:22t.a", "", [ "$bb" ] ],
     [ "r5:1", "bb1:22t.b", "", [ "$bb" ] ],
-    [ "r5:2", "bb1:22b.f", "", [ "$bb" ] ],
-    [ "rtc1:SCL", "uno:A5", "green", [ "h0" ] ],
-    [ "rtc1:SDA", "uno:A4", "green", [ "h0" ] ]
+    [ "r5:2", "bb1:22b.f", "", [ "$bb" ] ]
   ],
   "dependencies": {}
 }
