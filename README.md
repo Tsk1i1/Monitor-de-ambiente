@@ -83,6 +83,7 @@ A calibração ocorre automaticamente na inicialização.
 
 - **setup()**: Inicializa sensores, LCD, RTC, LEDs, buzzer e realiza auto-calibração.
 - **loop()**: Lê sensores, atualiza display com dados e emoji, aciona LEDs e buzzer, e grava dados na EEPROM.
+- **animacao()**: Exibe a animação gráfica de inicialização do sistema.
 - **calibragem**: Lê o sensor LDR e armazena o valor de maior luminosidade para o funcionamento do sistema.
 - **getNextAddress**: Atualiza endereços para registros na EEPROM.
 - **get_log**: Lê dados na EEPROM e mostra no dispositivo de comunicação serial. 
