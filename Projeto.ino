@@ -41,6 +41,83 @@ int endAddress = maxRecords * recordSize;
 int currentAddress = 0;
 
 int lastLoggedMinute = -1;
+// Criação de caracteres especiais para a animação inicial
+byte locoFrente[8] = {
+  B00000,
+  B00000,
+  B00100,
+  B11100,
+  B11110,
+  B11110,
+  B11100,
+  B00111
+};
+
+byte vagaoMeio[8] = {
+  B00000,
+  B00000,
+  B11000,
+  B11111,
+  B11111,
+  B11111,
+  B11111,
+  B01110
+};
+byte vagaoFim[8] = {
+  B00000,
+  B01111,
+  B11111,
+  B01011,
+  B01011,
+  B01011,
+  B11111,
+  B01110
+};
+
+byte fumaca1[8] = {
+  B00000,
+  B01100,
+  B00111,
+  B00001,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+
+byte fumaca2[8] = {
+  B00000,
+  B11000,
+  B01110,
+  B00010,
+  B00000,
+  B00000,
+  B00000,
+  B00000
+};
+
+byte fumaca3[8] = {
+  B00000,
+  B00000,
+  B00000,
+  B11110,
+  B00011,
+  B00001,
+  B00000,
+  B00000
+};
+
+byte vagoneta[8] = {
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B00000,
+  B11111,
+  B01110
+};
+
 
 // Criação de caracteres personalizados para o LCD
 byte lamp[8] = {
@@ -110,14 +187,13 @@ byte Triste[8] = {
 };
 
 void setup() {
-// Declarando saídas e entradas do arduino.
+  // Declarando saídas e entradas do arduino.
   pinMode(Lerluz, INPUT);
   pinMode(LuzVerde, OUTPUT);
   pinMode(LuzAmarela, OUTPUT);
   pinMode(LuzVermelha, OUTPUT);
   pinMode(buzzer, OUTPUT);
   
-//
   Serial.begin(9600);
   dht.begin();
   RTC.begin();
@@ -126,30 +202,64 @@ void setup() {
   
   EEPROM.begin();
   
-// Configurando LCD para mensagens
-  lcd.init(); // Define o LCD como 16 colunas e 2 linhas
+  // Configurando LCD para mensagens
+  lcd.init(); // Inicia o LCD
   lcd.backlight();
+  animacao();//Tela de boas-vindas animad
+  calibragem(); // Inicia processo de calibragem da luz
+
+  // Sobrepõe os caracteres da animação para o uso do LCD
   lcd.createChar(1, lamp);
   lcd.createChar(2, term);
   lcd.createChar(3, gota);
   lcd.createChar(4, Feliz);
   lcd.createChar(5, Meh);
   lcd.createChar(6, Triste);
+}
+void animacao(){
+  lcd.createChar(0, locoFrente); // locomotiva
+  lcd.createChar(1, vagaoMeio);   // vagão
+  lcd.createChar(2, vagaoFim);    // vagão com cabine
+  lcd.createChar(3, fumaca1);
+  lcd.createChar(4, fumaca2);
+  lcd.createChar(5, fumaca3);    
+  lcd.createChar(6, vagoneta);    // vagoneta
 
-//Tela de boas-vindas animada
-  for (int i = 0; i < 6; i++) {
-    lcd.print("    Vinheria"); // Exibe texto centralizado
-    lcd.setCursor(0,1); // Move para a segunda linha
-    lcd.print("    Agnello"); // Exibe Nome da vinheria juntamente dos caracteres personalizados de garrafa e taça
-    delay(500);
-    lcd.clear(); // Limpa display
-    delay(500);
+  for (int pos = -3; pos <= 16; pos++) {
+    bool animar = pos % 2 == 0;
+
+    lcd.clear();
+
+    // Linha de cima: fumaça 
+    lcd.setCursor(pos, 0);
+    lcd.write(byte(animar ? 3 : 4)); 
+    lcd.setCursor(pos + 1, 0);
+    lcd.write(byte(5)); 
+
+    // Linha de baixo: trem 
+    lcd.setCursor(pos + 1, 1);
+    lcd.write(byte(6)); // vagonetas
+    lcd.setCursor(pos + 2, 1);
+    lcd.write(byte(2)); // vagão cabine
+    lcd.setCursor(pos + 3, 1);
+    lcd.write(byte(1)); // vagão meio
+    lcd.setCursor(pos + 4, 1);
+    lcd.write(byte(0)); // locomotiva
+    delay(300);
   }
+
+  lcd.clear();
+  lcd.setCursor(1, 0);
+  lcd.print("  Vinheria");
+  lcd.setCursor(1, 1);
+  lcd.print("    Agnello");
+  delay(2000);
+  lcd.clear();
   lcd.print("Seja bem-vindo!"); // Mensagem final de boas-vindas
   delay(2000);
   lcd.clear();
-  calibragem(); // Inicia processo de calibragem da luz
-  }
+}
+
 
 void calibragem(){
 // Mensagem de auto calibragem
@@ -182,8 +292,19 @@ void calibragem(){
         delay(500);                   // Pequeno atraso entre os pontos
     }
 
-    lcd.clear();                    // Limpa o display após cada rodada
-  }
+    lcd.clear();   // Limpa o display após cada rodada
+    
+  } 
+  lcd.print("Calibragem"); // Exibe a mensagem final da calibragem
+  lcd.setCursor(0,1);
+  lcd.print("concluida");
+  delay(2000);
+  lcd.clear();
+  lcd.print("Por favor");
+  lcd.setCursor(0,1);
+  lcd.print("Desligue a luz");
+  delay(3000);
+  lcd.clear();
 }
 
 void loop() {
@@ -197,13 +318,13 @@ void loop() {
   
   if (LOG_OPTION) get_log(); // Função de log, se ativada
 
-// Leitura de sensores
+  // Leitura de sensores
   int luz = analogRead(Lerluz);
   float temperatura = dht.readTemperature();
   float umidade = dht.readHumidity();
   int nivelLuz = map(luz, luzmax, 1023, 100, 0);  // Mapeia o valor da luz para uma escala de 0 a 100%
 
-// Coleta da média de luminosidade em 10s
+  // Coleta da média de luminosidade em 10s
   int leituraAtualLuz  = nivelLuz;
   int leituraAtualTemp = temperatura;
   int leituraAtualUmid = umidade;
@@ -249,7 +370,7 @@ void loop() {
   lcd.print(umidade, 0);
   lcd.print("%");
 
-// Monitoramento da Luz
+  // Monitoramento da Luz
   if (nivelLuz >= 70){ 
     // Ambiente muito iluminado (>80%) -> LED vermelho e buzzer (Acima de 55 Lux) .
     digitalWrite (LuzVerde, LOW);
@@ -279,7 +400,7 @@ void loop() {
   }
   delay(3000);
     
-// Monitoramento da Temperatura
+  // Monitoramento da Temperatura
   if (temperatura > 16 || temperatura < 10) {
     digitalWrite(LuzVerde, LOW);
     digitalWrite(LuzAmarela, LOW);
@@ -298,7 +419,7 @@ void loop() {
   }
   delay(3000);
 
-// Monitoramento da Umidade
+  // Monitoramento da Umidade
   if (umidade < 60 || umidade > 80) {
     digitalWrite (LuzVerde, LOW);
     digitalWrite (LuzAmarela, LOW);
