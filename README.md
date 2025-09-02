@@ -101,6 +101,6 @@ Simule esse projeto em https://wokwi.com/projects/430357110730052609
 
 ## Agradecimentos
 
-- Professor Nome do Professor (Disciplina: Edge Computing and Computer Systems, FIAP)
+- Professor Fabio Cabrini (Disciplina: Edge Computing and Computer Systems, FIAP)
 
 > **Observação:** Este projeto foi desenvolvido como parte da disciplina *Edge Computing and Computer Systems* na FIAP.
